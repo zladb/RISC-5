@@ -1,3 +1,6 @@
+#define _CRT_SECURE_NO_WARNINGS
+#pragma warning(disable:4996)
+
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
@@ -24,6 +27,19 @@ void print_cycles();
 void print_reg();
 void print_pc();
 
+char opcode[7];
+char funct3[3];
+char funct7[7];
+char rd[5];
+char rs1[5];
+char rs2[5];
+char imm[12];
+
+int rs1;
+int rs2;
+
+char ALUOP[2];
+
 //fetch an instruction from a instruction memory
 void fetch() {
 
@@ -31,6 +47,17 @@ void fetch() {
 
 //decode the instruction and read data from register file
 void decode() {
+	// add, addi, beq, jal, jalr, sd, ld
+	if (strcmp(opcode, 0110011) == 0) {
+		if (funct7 == 0000000) add
+		else if (fucnt7 == 0100000) sub
+	}
+
+	if (strcmp(opcode, 0010011) == 0 && funct3 == 000) addi
+
+	if (strcmp(opcode, 0000011) == 0 && funct3 == 011) ld
+
+	if (strcmp(opcode, 0100011) == 0) sd 
 
 }
 
@@ -62,6 +89,18 @@ int main(int ac, char* av[])
 	char done = 0;
 	if (init(av[1]) != 0)
 		return -1;
+
+	char arr[100];
+
+	printf("inst_mem[0] = %d\n", inst_mem[0]);
+	printf("inst_mem[0] to bin = %s\n", _itoa(inst_mem[0], arr, 2));
+	printf("inst_mem[1] = %d\n", inst_mem[1]);
+	printf("inst_mem[0] to bin = %s\n", _itoa(inst_mem[1], arr, 2));
+	printf("inst_mem[2] = %d\n", inst_mem[2]);
+	printf("inst_mem[0] to bin = %s\n", _itoa(inst_mem[2], arr, 2));
+	printf("inst_mem[3] = %d\n", inst_mem[3]);
+	printf("inst_mem[0] to bin = %s\n", _itoa(inst_mem[3], arr, 2));
+
 	while (!done)
 	{
 
