@@ -1,3 +1,7 @@
+
+// 컴퓨터구조 P2
+// 컴퓨터학부 2020112757 김유진
+
 #define _CRT_SECURE_NO_WARNINGS
 #pragma warning(disable:4996)
 
@@ -44,6 +48,7 @@ int reg_write;
 int mem_read;
 int mem_write;
 int branch;
+int PCSrs;
 
 int rd_index;
 int rs1_index;
@@ -53,6 +58,7 @@ int rs1_value;
 int rs2_value;
 int imm_value;
 int ALUresult;
+int branch_pc;
 int read_from_mem;
 
 char type[10];
@@ -69,6 +75,9 @@ int read_bin(char code[])
 
 //fetch an instruction from a instruction memory
 void fetch() {
+
+	printf("inst_mem[%d] = %d\n", pc, inst_mem[pc]);
+	printf("inst_mem[%d] to bin = %32s\n", pc, _itoa(inst_mem[pc], inst, 2));
 
 	_itoa(inst_mem[pc], inst, 2);
 
@@ -112,15 +121,14 @@ void fetch() {
 	strcat(S_imm, rd);
 	printf("S_imm: %s\n", S_imm);
 
-	pc++;
 }
 
 //decode the instruction and read data from register file
 void decode() {
-	// add, addi, beq, jal, jalr, sd, ld
+
+	//add
 	if (strcmp(opcode, "0110011") == 0 && strcmp(funct7, "0000000") == 0)
 	{
-		//add
 		rd_index = read_bin(rd);
 		printf("rd_index = x%d\n", rd_index);
 
@@ -138,11 +146,12 @@ void decode() {
 		mem_read = 0;
 		mem_write = 0;
 		branch = 0;
+		PCSrs = 0;
 	}
 
+	//addi
 	if (strcmp(opcode, "0010011") == 0 && strcmp(funct3, "000") == 0)
 	{
-		//addi
 		rd_index = read_bin(rd);
 		printf("rd_index = x%d\n", rd_index);
 
@@ -159,25 +168,54 @@ void decode() {
 		mem_read = 0;
 		mem_write = 0;
 		branch = 0;
+		PCSrs = 0;
 	}
 
-	// if (strcmp(opcode, 1100011) == 0 && funct3 == 000) beq;
-
-	//if (strcmp(opcode, 1101111) == 0) jal;
-
-	//if (strcmp(opcode, 1100111) == 0 && funct3 == 000) jalr;
-
-	if (strcmp(opcode, "0100011") == 0)
+	//beq
+	if (strcmp(opcode, "1100011") == 0 && strcmp(funct3, "000") == 0)
 	{
-		//sd
-		rs1_index = read_bin(rs1);	// BaseAddress
+		// rs1
+		rs1_index = read_bin(rs1);
 		rs1_value = regs[rs1_index];
 		printf("rs1_index, rs1_value = x%d, %d\n", rs1_index, rs1_value);
 
-		imm_value = read_bin(S_imm); // offset
+		// rs2
+		rs2_index = read_bin(rs2);
+		rs2_value = regs[rs2_index];
+		printf("rs2_index, rs2_value = x%d, %d\n", rs2_index, rs2_value);
+
+		// branch_offset
+		imm_value = read_bin(S_imm);
 		printf("imm_value = %d\n", imm_value);
 
-		rs2_index = read_bin(rs2);	 // 저장할 register
+		strcpy(type, "beq\0");
+		reg_write = 0;
+		mem_read = 0;
+		mem_write = 0;
+		branch = 1;
+		PCSrs = 0;
+	}
+
+	//jalr
+	//if (strcmp(opcode, 1100111) == 0 && funct3 == 000) jalr;
+
+	//jal
+	//if (strcmp(opcode, 1101111) == 0) jal;
+
+	//sd
+	if (strcmp(opcode, "0100011") == 0)
+	{
+		// BaseAddress
+		rs1_index = read_bin(rs1);
+		rs1_value = regs[rs1_index];
+		printf("rs1_index, rs1_value = x%d, %d\n", rs1_index, rs1_value);
+
+		// offset
+		imm_value = read_bin(S_imm);
+		printf("imm_value = %d\n", imm_value);
+
+		// 저장할 register
+		rs2_index = read_bin(rs2);
 		rs2_value = regs[rs2_index];
 		printf("rs2_index, rs2_value = x%d, %d\n", rs2_index, rs2_value);
 
@@ -186,11 +224,12 @@ void decode() {
 		mem_read = 0;
 		mem_write = 1;
 		branch = 0;
+		PCSrs = 0;
 	}
 
+	// ld
 	if (strcmp(opcode, "0000011") == 0 && strcmp(funct3, "011") == 0) 
 	{
-		// ld
 		rd_index = read_bin(rd);
 		printf("rd_index = x%d\n", rd_index);
 
@@ -207,6 +246,7 @@ void decode() {
 		mem_read = 1;
 		mem_write = 0;
 		branch = 0;
+		PCSrs = 0;
 	}
 	
 	printf("%s\n", type);
@@ -233,6 +273,16 @@ void exe() {
 	{
 		ALUresult = rs1_value + imm_value;	// 주소값 계산
 	}
+
+	if (strcmp(type, "beq") == 0)
+	{
+		ALUresult = rs1_value - rs2_value;	// rs1과 rs2가 같은지 확인. 같으면 0
+		branch_pc = pc + imm_value / 4;
+		if (!ALUresult && branch) PCSrs = 1;
+	}
+
+	if (PCSrs == 1) pc = branch_pc;
+	else pc++;
 }
 
 //access the data memory
@@ -273,15 +323,6 @@ int main(int ac, char* av[])
 	if (init(av[1]) != 0)
 		return -1;
 
-
-	printf("inst_mem[0] = %d\n", inst_mem[0]);
-	printf("inst_mem[0] to bin = %32s\n", _itoa(inst_mem[0], inst, 2));
-	//printf("inst_mem[1] = %d\n", inst_mem[1]);
-	/*printf("inst_mem[0] to bin = %s\n", _itoa(inst_mem[1], arr, 2));
-	printf("inst_mem[2] = %d\n", inst_mem[2]);
-	printf("inst_mem[0] to bin = %s\n", _itoa(inst_mem[2], arr, 2));
-	printf("inst_mem[3] = %d\n", inst_mem[3]);
-	printf("inst_mem[0] to bin = %s\n", _itoa(inst_mem[3], arr, 2));*/
 
 	while (!done)
 	{
