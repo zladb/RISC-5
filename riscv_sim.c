@@ -45,11 +45,15 @@ int mem_read;
 int mem_write;
 int branch;
 
+int rd_index;
+int rs1_index;
+int rs2_index;
 int rd_value;
 int rs1_value;
 int rs2_value;
 int imm_value;
 int ALUresult;
+int read_from_mem;
 
 char type[10];
 
@@ -117,14 +121,16 @@ void decode() {
 	if (strcmp(opcode, "0110011") == 0 && strcmp(funct7, "0000000") == 0)
 	{
 		//add
-		rd_value = read_bin(rd);
-		printf("%d\n", rd_value);
+		rd_index = read_bin(rd);
+		printf("rd_index = x%d\n", rd_index);
 
-		rs1_value = read_bin(rs1);
-		printf("%d\n", rs1_value);
+		rs1_index = read_bin(rs1);
+		rs1_value = regs[rs1_index];
+		printf("rs1_index, rs1_value = x%d, %d\n", rs1_index, rs1_value);
 
-		rs2_value = read_bin(rs2);
-		printf("%d\n", rs2_value);
+		rs2_index = read_bin(rs2);
+		rs2_value = regs[rs2_index];
+		printf("rs2_index, rs2_value = x%d, %d\n", rs2_index, rs2_value);
 
 		strcpy(type, "add\0");
 		memto_reg = 0;
@@ -137,14 +143,15 @@ void decode() {
 	if (strcmp(opcode, "0010011") == 0 && strcmp(funct3, "000") == 0)
 	{
 		//addi
-		rd_value = read_bin(rd);
-		printf("%d\n", rd_value);
+		rd_index = read_bin(rd);
+		printf("rd_index = x%d\n", rd_index);
 
-		rs1_value = read_bin(rs1);
-		printf("%d\n", rs1_value);
+		rs1_index = read_bin(rs1);
+		rs1_value = regs[rs1_index];
+		printf("rs1_index, rs1_value = x%d, %d\n", rs1_index, rs1_value);
 
 		imm_value = read_bin(I_imm);
-		printf("%d\n", imm_value);
+		printf("imm_value = %d\n", imm_value);
 
 		strcpy(type, "addi\0");
 		memto_reg = 0;
@@ -160,17 +167,39 @@ void decode() {
 
 	//if (strcmp(opcode, 1100111) == 0 && funct3 == 000) jalr;
 
+	if (strcmp(opcode, "0100011") == 0)
+	{
+		//sd
+		rs1_index = read_bin(rs1);	// BaseAddress
+		rs1_value = regs[rs1_index];
+		printf("rs1_index, rs1_value = x%d, %d\n", rs1_index, rs1_value);
+
+		imm_value = read_bin(S_imm); // offset
+		printf("imm_value = %d\n", imm_value);
+
+		rs2_index = read_bin(rs2);	 // 저장할 register
+		rs2_value = regs[rs2_index];
+		printf("rs2_index, rs2_value = x%d, %d\n", rs2_index, rs2_value);
+
+		strcpy(type, "sd\0");
+		reg_write = 0;
+		mem_read = 0;
+		mem_write = 1;
+		branch = 0;
+	}
+
 	if (strcmp(opcode, "0000011") == 0 && strcmp(funct3, "011") == 0) 
 	{
 		// ld
-		rd_value = read_bin(rd);
-		printf("%d\n", rd_value);
+		rd_index = read_bin(rd);
+		printf("rd_index = x%d\n", rd_index);
 
-		rs1_value = read_bin(rs1);
-		printf("%d\n", rs1_value);
+		rs1_index = read_bin(rs1);
+		rs1_value = regs[rs1_index];
+		printf("rs1_index, rs1_value = x%d, %d\n", rs1_index, rs1_value);
 
 		imm_value = read_bin(I_imm);
-		printf("%d\n", imm_value);
+		printf("imm_value = %d\n", imm_value);
 
 		strcpy(type, "ld\0");
 		memto_reg = 1;
@@ -179,53 +208,53 @@ void decode() {
 		mem_write = 0;
 		branch = 0;
 	}
-
-	if (strcmp(opcode, "0100011") == 0)
-	{
-		//sd
-
-		rs1_value = read_bin(rs1);
-		printf("%d\n", rs1_value);
-
-		imm_value = read_bin(S_imm); // address
-		printf("%d\n", imm_value);
-
-		rs2_value = read_bin(rs2); // 저장할 register
-		printf("%d\n", rs2_value);
-
-		strcpy(type, "ld\0");
-		reg_write = 0;
-		mem_read = 0;
-		mem_write = 1;
-		branch = 0;
-	}
+	
+	printf("%s\n", type);
 }
 
 //perform the appropriate operation 
 void exe() {
 	if (strcmp(type, "add") == 0)
 	{
-		ALUresult = regs[rs1_value] + regs[rs2_value];
+		ALUresult = rs1_value + rs2_value;
 	}
 
 	if (strcmp(type, "addi") == 0)
 	{
-		ALUresult = regs[rs1_value] + imm_value;
+		ALUresult = rs1_value + imm_value;
+	}
+
+	if (strcmp(type, "sd") == 0)
+	{
+		ALUresult = rs1_value + imm_value;	// 주소값 계산
+	}
+
+	if (strcmp(type, "ld") == 0)
+	{
+		ALUresult = rs1_value + imm_value;	// 주소값 계산
 	}
 }
 
 //access the data memory
 void mem() {
 
+	if (strcmp(type, "sd") == 0) {
+		data_mem[ALUresult] = rs2_value;
+	}
+
+	if (strcmp(type, "ld") == 0) {
+		read_from_mem = data_mem[ALUresult];
+	}
+
 }
 
 //write result of arithmetic operation or data read from the data memory if required
 void wb() {
-	if(memto_reg == 0 && reg_write == 1)  //R
-		regs[rd_value] = ALUresult;
+	if (memto_reg == 0 && reg_write == 1)  //R
+		regs[rd_index] = ALUresult;
 
 	if (memto_reg == 1 && reg_write == 1) //ld
-		regs[rd_value] = data_mem[10];
+		regs[rd_index] = read_from_mem;
 
 	regs[0] = 0;
 }
