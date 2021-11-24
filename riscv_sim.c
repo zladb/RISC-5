@@ -59,6 +59,7 @@ int rs2_value;
 int imm_value;
 int ALUresult;
 int branch_pc;
+int return_pc;
 int read_from_mem;
 
 char type[10];
@@ -196,11 +197,27 @@ void decode() {
 		PCSrs = 0;
 	}
 
+	//jal
+	if (strcmp(opcode, "1101111") == 0)
+	{
+		rd_index = read_bin(rd);
+		printf("rd_index = x%d\n", rd_index);
+
+		// branch_offset
+		imm_value = read_bin(I_imm);
+		printf("imm_value = %d\n", imm_value);
+
+		strcpy(type, "jal\0");
+		reg_write = 0;
+		mem_read = 0;
+		mem_write = 0;
+		branch = 1;
+		PCSrs = 0;
+	}
+
 	//jalr
 	//if (strcmp(opcode, 1100111) == 0 && funct3 == 000) jalr;
 
-	//jal
-	//if (strcmp(opcode, 1101111) == 0) jal;
 
 	//sd
 	if (strcmp(opcode, "0100011") == 0)
@@ -281,8 +298,13 @@ void exe() {
 		if (!ALUresult && branch) PCSrs = 1;
 	}
 
-	if (PCSrs == 1) pc = branch_pc;
-	else pc++;
+	if (strcmp(type, "jal") == 0)
+	{
+		return_pc = pc + 1;
+		branch_pc = pc + imm_value / 4;
+		PCSrs = 1;
+	}
+
 }
 
 //access the data memory
@@ -306,6 +328,12 @@ void wb() {
 	if (memto_reg == 1 && reg_write == 1) //ld
 		regs[rd_index] = read_from_mem;
 
+	if (strcmp(type, "jal") == 0)
+		regs[rd_index] = return_pc;
+
+
+	if (PCSrs == 1) pc = branch_pc;
+	else pc++;
 	regs[0] = 0;
 }
 
