@@ -216,7 +216,25 @@ void decode() {
 	}
 
 	//jalr
-	//if (strcmp(opcode, 1100111) == 0 && funct3 == 000) jalr;
+	if (strcmp(opcode, "1100111") == 0 && strcmp(funct3, "000") == 0)
+	{
+		rd_index = read_bin(rd);
+		printf("rd_index = x%d\n", rd_index);
+
+		rs1_index = read_bin(rs1);
+		rs1_value = regs[rs1_index];
+		printf("rs1_index, rs1_value = x%d, %d\n", rs1_index, rs1_value);
+
+		imm_value = read_bin(I_imm);
+		printf("imm_value = %d\n", imm_value);
+
+		strcpy(type, "jalr\0");
+		reg_write = 0;
+		mem_read = 0;
+		mem_write = 0;
+		branch = 1;
+		PCSrs = 0;
+	}
 
 
 	//sd
@@ -305,6 +323,14 @@ void exe() {
 		PCSrs = 1;
 	}
 
+	if (strcmp(type, "jalr") == 0)
+	{
+		return_pc = pc + 1;
+		branch_pc = rs1_value + imm_value;
+		// branch_pc = pc + imm_value / 4;
+		PCSrs = 1;
+	}
+
 }
 
 //access the data memory
@@ -329,6 +355,9 @@ void wb() {
 		regs[rd_index] = read_from_mem;
 
 	if (strcmp(type, "jal") == 0)
+		regs[rd_index] = return_pc;
+
+	if (strcmp(type, "jalr") == 0)
 		regs[rd_index] = return_pc;
 
 
