@@ -68,9 +68,34 @@ int read_bin(char code[])
 {
 	int result = 0;
 	int code_len = strlen(code);
-	for (int i = 0; code[i]; i++) {
-		result = (result << 1) + code[i] - '0';
+	char convert[13] = {0,};
+
+	// 상수가 음수일 때!
+	if (code_len == 12 && code[0]=='1')
+	{
+		for (int i = 0; code[i]; i++)
+		{
+			if (code[i] == '0') convert[i] = '1';
+			else if (code[i] == '1') convert[i] = '0';
+		}
+
+		for (int i = 0; code[i]; i++)
+		{
+			result = (result << 1) + convert[i] - '0';
+		}
+
+		result += 1;
+		result = -result;
 	}
+
+	else 
+	{
+		for (int i = 0; code[i]; i++)
+		{
+			result = (result << 1) + code[i] - '0';
+		}
+	}
+
 	return result;
 }
 
