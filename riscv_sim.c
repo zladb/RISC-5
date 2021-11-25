@@ -105,7 +105,7 @@ void fetch() {
 	printf("inst_mem[%d] = %d\n", pc, inst_mem[pc]);
 	printf("inst_mem[%d] to bin = %32s\n", pc, _itoa(inst_mem[pc], inst, 2));
 
-	_itoa(inst_mem[pc], inst, 2);
+	_itoa(inst_mem[pc/4], inst, 2);
 
 	memset(inst32, '0', 33);
 	memset(opcode, '\0', 8);
@@ -337,20 +337,20 @@ void exe() {
 	if (strcmp(type, "beq") == 0)
 	{
 		ALUresult = rs1_value - rs2_value;	// rs1과 rs2가 같은지 확인. 같으면 0
-		branch_pc = pc + imm_value / 4;
+		branch_pc = pc + imm_value;
 		if (!ALUresult && branch) PCSrs = 1;
 	}
 
 	if (strcmp(type, "jal") == 0)
 	{
-		return_pc = pc + 1;
-		branch_pc = pc + imm_value / 4;
+		return_pc = pc + 4;
+		branch_pc = pc + imm_value;
 		PCSrs = 1;
 	}
 
 	if (strcmp(type, "jalr") == 0)
 	{
-		return_pc = pc + 1;
+		return_pc = pc + 4;
 		branch_pc = rs1_value + imm_value;
 		// branch_pc = pc + imm_value / 4;
 		PCSrs = 1;
@@ -387,7 +387,7 @@ void wb() {
 
 
 	if (PCSrs == 1) pc = branch_pc;
-	else pc++;
+	else pc += 4;
 	regs[0] = 0;
 }
 
