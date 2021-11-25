@@ -102,10 +102,10 @@ int read_bin(char code[])
 //fetch an instruction from a instruction memory
 void fetch() {
 
-	printf("inst_mem[%d] = %d\n", pc, inst_mem[pc]);
-	printf("inst_mem[%d] to bin = %32s\n", pc, _itoa(inst_mem[pc], inst, 2));
+	printf("inst_mem[%d] = %d\n", pc, inst_mem[pc/4]);
+	printf("inst_mem[%d] to bin = %32s\n", pc, _itoa(inst_mem[pc/4], inst, 2));
 
-	_itoa(inst_mem[pc/4], inst, 2);
+	//_itoa(inst_mem[pc/4], inst, 2);
 
 	memset(inst32, '0', 33);
 	memset(opcode, '\0', 8);
