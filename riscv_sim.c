@@ -371,6 +371,7 @@ void mem() {
 		read_from_mem = data_mem[ALUresult];
 	}
 
+	if (PCSrs == 1) pc = branch_pc;
 }
 
 //write result of arithmetic operation or data read from the data memory if required
@@ -388,8 +389,10 @@ void wb() {
 		regs[rd_index] = return_pc;
 
 
-	if (PCSrs == 1) pc = branch_pc;
-	else pc += 4;
+	//if (PCSrs == 1) pc = branch_pc;
+	//else pc += 4;
+
+	if (PCSrs == 0) pc += 4;
 	regs[0] = 0;
 }
 
