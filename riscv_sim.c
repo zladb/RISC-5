@@ -1,5 +1,5 @@
 
-// 컴퓨터구조 P2 
+// 컴퓨터구조 P2
 // 컴퓨터학부 2020112757 김유진
 
 #define _CRT_SECURE_NO_WARNINGS
@@ -102,8 +102,10 @@ int read_bin(char code[])
 //fetch an instruction from a instruction memory
 void fetch() {
 
-	printf("inst_mem[%d] = %d\n", pc, inst_mem[pc/4]);
-	printf("inst_mem[%d] to bin = %32s\n", pc, _itoa(inst_mem[pc/4], inst, 2));
+	if (pc % 2 == 1) pc--;
+
+	printf("inst_mem[%d] = %d\n", pc/4, inst_mem[pc/4]);
+	printf("inst_mem[%d] to bin = %32s\n", pc/4, _itoa(inst_mem[pc/4], inst, 2));
 
 	//_itoa(inst_mem[pc/4], inst, 2);
 
@@ -337,14 +339,14 @@ void exe() {
 	if (strcmp(type, "beq") == 0)
 	{
 		ALUresult = rs1_value - rs2_value;	// rs1과 rs2가 같은지 확인. 같으면 0
-		branch_pc = pc + imm_value;
+		branch_pc = pc + imm_value ;
 		if (!ALUresult && branch) PCSrs = 1;
 	}
 
 	if (strcmp(type, "jal") == 0)
 	{
 		return_pc = pc + 4;
-		branch_pc = pc + imm_value;
+		branch_pc = pc + imm_value ;
 		PCSrs = 1;
 	}
 
