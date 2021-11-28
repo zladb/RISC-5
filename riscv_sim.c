@@ -1,5 +1,5 @@
 
-// 컴퓨터구조 P2
+// 컴퓨터구조 P2 
 // 컴퓨터학부 2020112757 김유진
 
 #define _CRT_SECURE_NO_WARNINGS
