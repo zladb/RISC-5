@@ -1,5 +1,5 @@
 
-// 컴퓨터구조 P2
+// 컴퓨터구조 P2_RISCV_Simulator
 // 컴퓨터학부 2020112757 김유진
 
 #define _CRT_SECURE_NO_WARNINGS
@@ -64,21 +64,24 @@ int read_from_mem;
 
 char type[10];
 
+// 2진수 문자열을 10진수 숫자로 변환하는 함수
 int read_bin(char code[]) 
 {
 	int result = 0;
 	int code_len = strlen(code);
 	char convert[13] = {0,};
 
-	// 상수가 음수일 때!
+	// 상수가 음수일 때 2의 보수로 구하기!
 	if (code_len == 12 && code[0]=='1')
 	{
+		// 0->1 , 1->0
 		for (int i = 0; code[i]; i++)
 		{
 			if (code[i] == '0') convert[i] = '1';
 			else if (code[i] == '1') convert[i] = '0';
 		}
 
+		// 2진수 -> 10진수
 		for (int i = 0; code[i]; i++)
 		{
 			result = (result << 1) + convert[i] - '0';
@@ -88,6 +91,7 @@ int read_bin(char code[])
 		result = -result;
 	}
 
+	// 2진수 -> 10진수
 	else 
 	{
 		for (int i = 0; code[i]; i++)
@@ -95,19 +99,17 @@ int read_bin(char code[])
 			result = (result << 1) + code[i] - '0';
 		}
 	}
-
 	return result;
 }
 
 //fetch an instruction from a instruction memory
 void fetch() {
 
-	//if (pc % 2 == 1) pc--;
+	//printf("inst_mem[%d] = %d\n", pc/4, inst_mem[pc/4]);
+	//printf("inst_mem[%d] to bin = %32s\n", pc/4, _itoa(inst_mem[pc/4], inst, 2));
 
-	printf("inst_mem[%d] = %d\n", pc/4, inst_mem[pc/4]);
-	printf("inst_mem[%d] to bin = %32s\n", pc/4, _itoa(inst_mem[pc/4], inst, 2));
-
-	//_itoa(inst_mem[pc/4], inst, 2);
+	// instruction 가져오기
+	_itoa(inst_mem[pc / 4], inst, 2);
 
 	memset(inst32, '0', 33);
 	memset(opcode, '\0', 8);
@@ -116,38 +118,38 @@ void fetch() {
 	memset(rd, '\0', 6);
 	memset(rs1, '\0', 6);
 	memset(rs2, '\0', 6);
-	memset(I_imm, '\0', 14);
-	memset(S_imm, '\0', 14);
+	memset(I_imm, '\0', 13);
+	memset(S_imm, '\0', 13);
 
 	int len = strlen(inst);
 	strcpy(inst32 + (32 - len), inst);
-	printf("%s\n", inst32);
+	//printf("%s\n", inst32);
 
 	strncpy(opcode, inst32 + 25, 7);
-	printf("opcode:	%s\n", opcode);
+	//printf("opcode:	%s\n", opcode);
 
 	strncpy(rd, inst32 + 20, 5);
-	printf("rd: %s\n", rd);
+	//printf("rd: %s\n", rd);
 
 	strncpy(funct3, inst32 + 17, 3);
-	printf("funct3: %s\n", funct3);
+	//printf("funct3: %s\n", funct3);
 
 	strncpy(rs1, inst32 + 12, 5);
-	printf("rs1: %s\n", rs1);
+	//printf("rs1: %s\n", rs1);
 
 	strncpy(rs2, inst32 + 7, 5);
-	printf("rs2: %s\n", rs2);
+	//printf("rs2: %s\n", rs2);
 
 	strncpy(funct7, inst32, 7);
-	printf("funct7: %s\n", funct7);
+	//printf("funct7: %s\n", funct7);
 
 	strcat(I_imm, funct7);
 	strcat(I_imm, rs2);
-	printf("I_imm: %s\n", I_imm);
+	//printf("I_imm: %s\n", I_imm);
 
 	strcat(S_imm, funct7);
 	strcat(S_imm, rd);
-	printf("S_imm: %s\n", S_imm);
+	//printf("S_imm: %s\n", S_imm);
 
 }
 
@@ -157,16 +159,19 @@ void decode() {
 	//add
 	if (strcmp(opcode, "0110011") == 0 && strcmp(funct7, "0000000") == 0)
 	{
+		// rd
 		rd_index = read_bin(rd);
-		printf("rd_index = x%d\n", rd_index);
+		//printf("rd_index = x%d\n", rd_index);
 
+		// rs1
 		rs1_index = read_bin(rs1);
 		rs1_value = regs[rs1_index];
-		printf("rs1_index, rs1_value = x%d, %d\n", rs1_index, rs1_value);
+		//printf("rs1_index, rs1_value = x%d, %d\n", rs1_index, rs1_value);
 
+		// rs2
 		rs2_index = read_bin(rs2);
 		rs2_value = regs[rs2_index];
-		printf("rs2_index, rs2_value = x%d, %d\n", rs2_index, rs2_value);
+		//printf("rs2_index, rs2_value = x%d, %d\n", rs2_index, rs2_value);
 
 		strcpy(type, "add\0");
 		memto_reg = 0;
@@ -180,15 +185,18 @@ void decode() {
 	//addi
 	if (strcmp(opcode, "0010011") == 0 && strcmp(funct3, "000") == 0)
 	{
+		// rd
 		rd_index = read_bin(rd);
-		printf("rd_index = x%d\n", rd_index);
+		//printf("rd_index = x%d\n", rd_index);
 
+		// rs1
 		rs1_index = read_bin(rs1);
 		rs1_value = regs[rs1_index];
-		printf("rs1_index, rs1_value = x%d, %d\n", rs1_index, rs1_value);
+		//printf("rs1_index, rs1_value = x%d, %d\n", rs1_index, rs1_value);
 
+		// I_imm
 		imm_value = read_bin(I_imm);
-		printf("imm_value = %d\n", imm_value);
+		//printf("imm_value = %d\n", imm_value);
 
 		strcpy(type, "addi\0");
 		memto_reg = 0;
@@ -205,12 +213,12 @@ void decode() {
 		// rs1
 		rs1_index = read_bin(rs1);
 		rs1_value = regs[rs1_index];
-		printf("rs1_index, rs1_value = x%d, %d\n", rs1_index, rs1_value);
+		//printf("rs1_index, rs1_value = x%d, %d\n", rs1_index, rs1_value);
 
 		// rs2
 		rs2_index = read_bin(rs2);
 		rs2_value = regs[rs2_index];
-		printf("rs2_index, rs2_value = x%d, %d\n", rs2_index, rs2_value);
+		//printf("rs2_index, rs2_value = x%d, %d\n", rs2_index, rs2_value);
 
 		// branch_offset
 		int beq_imm[13] = {'\0',};
@@ -219,7 +227,7 @@ void decode() {
 		strncat(beq_imm, S_imm + 1, 6);
 		strncat(beq_imm, S_imm + 7, 4);
 		imm_value = read_bin(beq_imm);
-		printf("imm_value = %d\n", imm_value);
+		//printf("imm_value = %d\n", imm_value);
 
 		strcpy(type, "beq\0");
 		reg_write = 0;
@@ -232,8 +240,9 @@ void decode() {
 	//jal
 	if (strcmp(opcode, "1101111") == 0)
 	{
+		// rd
 		rd_index = read_bin(rd);
-		printf("rd_index = x%d\n", rd_index);
+		//printf("rd_index = x%d\n", rd_index);
 
 		// branch_offset
 		int jal_imm[13] = {'\0',};
@@ -242,7 +251,7 @@ void decode() {
 		strncat(jal_imm, I_imm + 11, 1);
 		strncat(jal_imm, I_imm + 1, 10);
 		imm_value = read_bin(jal_imm);
-		printf("imm_value = %d\n", imm_value);
+		//printf("imm_value = %d\n", imm_value);
 
 		strcpy(type, "jal\0");
 		reg_write = 0;
@@ -255,15 +264,18 @@ void decode() {
 	//jalr
 	if (strcmp(opcode, "1100111") == 0 && strcmp(funct3, "000") == 0)
 	{
+		// rd
 		rd_index = read_bin(rd);
-		printf("rd_index = x%d\n", rd_index);
+		//printf("rd_index = x%d\n", rd_index);
 
+		// rs1
 		rs1_index = read_bin(rs1);
 		rs1_value = regs[rs1_index];
-		printf("rs1_index, rs1_value = x%d, %d\n", rs1_index, rs1_value);
+		//printf("rs1_index, rs1_value = x%d, %d\n", rs1_index, rs1_value);
 
+		// I_imm
 		imm_value = read_bin(I_imm);
-		printf("imm_value = %d\n", imm_value);
+		//printf("imm_value = %d\n", imm_value);
 
 		strcpy(type, "jalr\0");
 		reg_write = 0;
@@ -277,19 +289,19 @@ void decode() {
 	//sd
 	if (strcmp(opcode, "0100011") == 0)
 	{
-		// BaseAddress
+		// rs1: BaseAddress
 		rs1_index = read_bin(rs1);
 		rs1_value = regs[rs1_index];
-		printf("rs1_index, rs1_value = x%d, %d\n", rs1_index, rs1_value);
+		//printf("rs1_index, rs1_value = x%d, %d\n", rs1_index, rs1_value);
 
 		// offset
 		imm_value = read_bin(S_imm);
-		printf("imm_value = %d\n", imm_value);
+		//printf("imm_value = %d\n", imm_value);
 
-		// 저장할 register
+		// rs2: 저장할 register
 		rs2_index = read_bin(rs2);
 		rs2_value = regs[rs2_index];
-		printf("rs2_index, rs2_value = x%d, %d\n", rs2_index, rs2_value);
+		//printf("rs2_index, rs2_value = x%d, %d\n", rs2_index, rs2_value);
 
 		strcpy(type, "sd\0");
 		reg_write = 0;
@@ -302,15 +314,18 @@ void decode() {
 	// ld
 	if (strcmp(opcode, "0000011") == 0 && strcmp(funct3, "011") == 0) 
 	{
+		// rd
 		rd_index = read_bin(rd);
-		printf("rd_index = x%d\n", rd_index);
+		//printf("rd_index = x%d\n", rd_index);
 
+		// rs1
 		rs1_index = read_bin(rs1);
 		rs1_value = regs[rs1_index];
-		printf("rs1_index, rs1_value = x%d, %d\n", rs1_index, rs1_value);
+		//printf("rs1_index, rs1_value = x%d, %d\n", rs1_index, rs1_value);
 
+		// I_imm
 		imm_value = read_bin(I_imm);
-		printf("imm_value = %d\n", imm_value);
+		//printf("imm_value = %d\n", imm_value);
 
 		strcpy(type, "ld\0");
 		memto_reg = 1;
@@ -321,11 +336,12 @@ void decode() {
 		PCSrs = 0;
 	}
 	
-	printf("%s\n", type);
+	//printf("%s\n", type);
 }
 
 //perform the appropriate operation 
 void exe() {
+
 	if (strcmp(type, "add") == 0)
 	{
 		ALUresult = rs1_value + rs2_value;
@@ -349,22 +365,21 @@ void exe() {
 	if (strcmp(type, "beq") == 0)
 	{
 		ALUresult = rs1_value - rs2_value;	// rs1과 rs2가 같은지 확인. 같으면 0
-		branch_pc = pc + (imm_value << 1);
+		branch_pc = pc + (imm_value << 1);	// imm << 1한후 branch 주소 계산 
 		if (!ALUresult && branch) PCSrs = 1;
 	}
 
 	if (strcmp(type, "jal") == 0)
 	{
-		return_pc = pc + 4;
-		branch_pc = pc + (imm_value << 1);
+		return_pc = pc + 4;					// 돌아갈 주소 계산
+		branch_pc = pc + (imm_value << 1);	// imm << 1한후 branch 주소 계산 
 		PCSrs = 1;
 	}
 
 	if (strcmp(type, "jalr") == 0)
 	{
-		return_pc = pc + 4;
-		branch_pc = rs1_value + imm_value;
-		// branch_pc = pc + imm_value / 4;
+		return_pc = pc + 4;					// 돌아갈 주소 계산
+		branch_pc = rs1_value + imm_value;	// branch 주소 계산
 		PCSrs = 1;
 	}
 
@@ -374,22 +389,23 @@ void exe() {
 void mem() {
 
 	if (strcmp(type, "sd") == 0) {
-		data_mem[ALUresult] = rs2_value;
+		data_mem[ALUresult] = rs2_value;	// 메모리에 데이터 savd
 	}
 
 	if (strcmp(type, "ld") == 0) {
-		read_from_mem = data_mem[ALUresult];
+		read_from_mem = data_mem[ALUresult];	// 메모리부터 데이터 load
 	}
 
-	if (PCSrs == 1) pc = branch_pc;
+	if (PCSrs == 1) pc = branch_pc;		// beq일 경우 여기서 PC update
 }
 
 //write result of arithmetic operation or data read from the data memory if required
 void wb() {
-	if (memto_reg == 0 && reg_write == 1)  //R
+
+	if (memto_reg == 0 && reg_write == 1)	// R type
 		regs[rd_index] = ALUresult;
 
-	if (memto_reg == 1 && reg_write == 1) //ld
+	if (memto_reg == 1 && reg_write == 1)	// ld
 		regs[rd_index] = read_from_mem;
 
 	if (strcmp(type, "jal") == 0)
@@ -398,11 +414,7 @@ void wb() {
 	if (strcmp(type, "jalr") == 0)
 		regs[rd_index] = return_pc;
 
-
-	//if (PCSrs == 1) pc = branch_pc;
-	//else pc += 4;
-
-	if (PCSrs == 0) pc += 4;
+	if (PCSrs == 0) pc += 4;				// PC update
 	regs[0] = 0;
 }
 
