@@ -102,7 +102,7 @@ int read_bin(char code[])
 //fetch an instruction from a instruction memory
 void fetch() {
 
-	if (pc % 2 == 1) pc--;
+	//if (pc % 2 == 1) pc--;
 
 	printf("inst_mem[%d] = %d\n", pc/4, inst_mem[pc/4]);
 	printf("inst_mem[%d] to bin = %32s\n", pc/4, _itoa(inst_mem[pc/4], inst, 2));
@@ -116,8 +116,8 @@ void fetch() {
 	memset(rd, '\0', 6);
 	memset(rs1, '\0', 6);
 	memset(rs2, '\0', 6);
-	memset(I_imm, '\0', 13);
-	memset(S_imm, '\0', 13);
+	memset(I_imm, '\0', 14);
+	memset(S_imm, '\0', 14);
 
 	int len = strlen(inst);
 	strcpy(inst32 + (32 - len), inst);
@@ -213,7 +213,12 @@ void decode() {
 		printf("rs2_index, rs2_value = x%d, %d\n", rs2_index, rs2_value);
 
 		// branch_offset
-		imm_value = read_bin(S_imm);
+		int beq_imm[13] = {'\0',};
+		strncat(beq_imm, S_imm, 1);
+		strncat(beq_imm, S_imm + 11, 1);
+		strncat(beq_imm, S_imm + 1, 6);
+		strncat(beq_imm, S_imm + 7, 4);
+		imm_value = read_bin(beq_imm);
 		printf("imm_value = %d\n", imm_value);
 
 		strcpy(type, "beq\0");
@@ -231,7 +236,12 @@ void decode() {
 		printf("rd_index = x%d\n", rd_index);
 
 		// branch_offset
-		imm_value = read_bin(I_imm);
+		int jal_imm[13] = {'\0',};
+		strncat(jal_imm, I_imm, 1);
+		strncat(jal_imm, I_imm + 12, 8);
+		strncat(jal_imm, I_imm + 11, 1);
+		strncat(jal_imm, I_imm + 1, 10);
+		imm_value = read_bin(jal_imm);
 		printf("imm_value = %d\n", imm_value);
 
 		strcpy(type, "jal\0");
@@ -339,14 +349,14 @@ void exe() {
 	if (strcmp(type, "beq") == 0)
 	{
 		ALUresult = rs1_value - rs2_value;	// rs1과 rs2가 같은지 확인. 같으면 0
-		branch_pc = pc + imm_value ;
+		branch_pc = pc + (imm_value << 1);
 		if (!ALUresult && branch) PCSrs = 1;
 	}
 
 	if (strcmp(type, "jal") == 0)
 	{
 		return_pc = pc + 4;
-		branch_pc = pc + imm_value ;
+		branch_pc = pc + (imm_value << 1);
 		PCSrs = 1;
 	}
 
