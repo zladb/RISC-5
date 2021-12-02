@@ -58,6 +58,7 @@ int rs1_value;
 int rs2_value;
 int imm_value;
 int ALUresult;
+int prePC;
 int branch_pc;
 int return_pc;
 int read_from_mem;
@@ -151,6 +152,8 @@ void fetch() {
 	strcat(S_imm, rd);
 	//printf("S_imm: %s\n", S_imm);
 
+	prePC = pc;
+	pc += 4;				// PC update
 }
 
 //decode the instruction and read data from register file
@@ -354,32 +357,32 @@ void exe() {
 
 	if (strcmp(type, "sd") == 0)
 	{
-		ALUresult = rs1_value + imm_value;	// 주소값 계산
+		ALUresult = rs1_value + imm_value;		// 주소값 계산
 	}
 
 	if (strcmp(type, "ld") == 0)
 	{
-		ALUresult = rs1_value + imm_value;	// 주소값 계산
+		ALUresult = rs1_value + imm_value;		// 주소값 계산
 	}
 
 	if (strcmp(type, "beq") == 0)
 	{
-		ALUresult = rs1_value - rs2_value;	// rs1과 rs2가 같은지 확인. 같으면 0
-		branch_pc = pc + (imm_value << 1);	// imm << 1한후 branch 주소 계산 
+		ALUresult = rs1_value - rs2_value;		// rs1과 rs2가 같은지 확인. 같으면 0
+		branch_pc = prePC + (imm_value << 1);	// imm << 1한후 branch 주소 계산 
 		if (!ALUresult && branch) PCSrs = 1;
 	}
 
 	if (strcmp(type, "jal") == 0)
 	{
-		return_pc = pc + 4;					// 돌아갈 주소 계산
-		branch_pc = pc + (imm_value << 1);	// imm << 1한후 branch 주소 계산 
+		return_pc = pc;							// 돌아갈 주소
+		branch_pc = prePC + (imm_value << 1);	// imm << 1한후 branch 주소 계산 
 		PCSrs = 1;
 	}
 
 	if (strcmp(type, "jalr") == 0)
 	{
-		return_pc = pc + 4;					// 돌아갈 주소 계산
-		branch_pc = rs1_value + imm_value;	// branch 주소 계산
+		return_pc = pc;							// 돌아갈 주소
+		branch_pc = rs1_value + imm_value;		// branch 주소 계산
 		PCSrs = 1;
 	}
 
@@ -389,14 +392,14 @@ void exe() {
 void mem() {
 
 	if (strcmp(type, "sd") == 0) {
-		data_mem[ALUresult] = rs2_value;	// 메모리에 데이터 savd
+		data_mem[ALUresult] = rs2_value;		// 메모리에 데이터 savd
 	}
 
 	if (strcmp(type, "ld") == 0) {
 		read_from_mem = data_mem[ALUresult];	// 메모리부터 데이터 load
 	}
 
-	if (PCSrs == 1) pc = branch_pc;		// beq일 경우 여기서 PC update
+	if (PCSrs == 1) pc = branch_pc;				// beq일 경우 여기서 PC update
 }
 
 //write result of arithmetic operation or data read from the data memory if required
@@ -414,7 +417,6 @@ void wb() {
 	if (strcmp(type, "jalr") == 0)
 		regs[rd_index] = return_pc;
 
-	if (PCSrs == 0) pc += 4;				// PC update
 	regs[0] = 0;
 }
 
@@ -514,7 +516,7 @@ void print_cycles()
 
 void print_pc()
 {
-	printf("PC	   = %ld\n\n", pc);
+	printf("PC	     = %ld\n\n", pc);
 }
 
 void print_reg()
