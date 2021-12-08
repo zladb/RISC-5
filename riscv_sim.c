@@ -32,6 +32,7 @@ void print_cycles();
 void print_reg();
 void print_pc();
 
+// code
 char inst[33];
 char inst32[33];
 char opcode[8];
@@ -43,6 +44,7 @@ char rs2[6];
 char I_imm[13];
 char S_imm[13];
 
+// control
 int memto_reg;
 int reg_write;
 int mem_read;
@@ -50,6 +52,7 @@ int mem_write;
 int branch;
 int PCSrs;
 
+// index, value, pc
 int rd_index;
 int rs1_index;
 int rs2_index;
