@@ -32,6 +32,7 @@ void print_cycles();
 void print_reg();
 void print_pc();
 
+// code
 char inst[33];
 char inst32[33];
 char opcode[8];
@@ -43,6 +44,7 @@ char rs2[6];
 char I_imm[13];
 char S_imm[13];
 
+// control
 int memto_reg;
 int reg_write;
 int mem_read;
@@ -50,6 +52,7 @@ int mem_write;
 int branch;
 int PCSrs;
 
+// index, value, pc
 int rd_index;
 int rs1_index;
 int rs2_index;
@@ -66,14 +69,14 @@ int read_from_mem;
 char type[10];
 
 // 2진수 문자열을 10진수 숫자로 변환하는 함수
-int read_bin(char code[]) 
+int read_bin(char code[])
 {
 	int result = 0;
 	int code_len = strlen(code);
-	char convert[13] = {0,};
+	char convert[13] = { 0, };
 
 	// 상수가 음수일 때 2의 보수로 구하기!
-	if (code_len == 12 && code[0]=='1')
+	if (code_len == 12 && code[0] == '1')
 	{
 		// 0->1 , 1->0
 		for (int i = 0; code[i]; i++)
@@ -93,7 +96,7 @@ int read_bin(char code[])
 	}
 
 	// 2진수 -> 10진수
-	else 
+	else
 	{
 		for (int i = 0; code[i]; i++)
 		{
@@ -224,7 +227,7 @@ void decode() {
 		//printf("rs2_index, rs2_value = x%d, %d\n", rs2_index, rs2_value);
 
 		// branch_offset
-		int beq_imm[13] = {'\0',};
+		int beq_imm[13] = { '\0', };
 		strncat(beq_imm, S_imm, 1);
 		strncat(beq_imm, S_imm + 11, 1);
 		strncat(beq_imm, S_imm + 1, 6);
@@ -248,7 +251,7 @@ void decode() {
 		//printf("rd_index = x%d\n", rd_index);
 
 		// branch_offset
-		int jal_imm[13] = {'\0',};
+		int jal_imm[13] = { '\0', };
 		strncat(jal_imm, I_imm, 1);
 		strncat(jal_imm, I_imm + 12, 8);
 		strncat(jal_imm, I_imm + 11, 1);
@@ -315,7 +318,7 @@ void decode() {
 	}
 
 	// ld
-	if (strcmp(opcode, "0000011") == 0 && strcmp(funct3, "011") == 0) 
+	if (strcmp(opcode, "0000011") == 0 && strcmp(funct3, "011") == 0)
 	{
 		// rd
 		rd_index = read_bin(rd);
@@ -338,7 +341,7 @@ void decode() {
 		branch = 0;
 		PCSrs = 0;
 	}
-	
+
 	//printf("%s\n", type);
 }
 
